@@ -19,27 +19,32 @@ const axiosAPI = axios.create({
   }
 })
 
+// Utils
+function renderInformation(data, container){
+  container.innerHTML = '';
+
+  console.log(container);
+
+  data.results.forEach(movie => {
+      const movieContainer = document.createElement('div');
+      movieContainer.classList.add('movie-container');
+      const movieImg = document.createElement('img');
+      movieImg.classList.add('movie-img');
+      movieImg.setAttribute('alt', movie.title);
+      movieImg.setAttribute('src', `https://image.tmdb.org/t/p/w300${movie.poster_path}`);
+      movieContainer.appendChild(movieImg);
+      container.appendChild(movieContainer);
+    });
+}
+
+// Llamados a la API
 
 async function getTrendingMoviesPreview(){
     const data = await axiosAPI(`/trending/movie/day`);
-    // const trendingMoviesPreviewList = document.querySelector('#trendingPreview .trendingPreview-movieList');
-    // Este elemento se esta obteniendo desde el archivo nodes.js
-
-    trendingMoviesPreviewList.innerHTML = '';
-
-    data.data.results.forEach(movie => {
-        const movieContainer = document.createElement('div');
-        movieContainer.classList.add('movie-container');
     
-        const movieImg = document.createElement('img');
-        movieImg.classList.add('movie-img');
-        movieImg.setAttribute('alt', movie.title);
-        movieImg.setAttribute('src', `https://image.tmdb.org/t/p/w300${movie.poster_path}`);
-    
-        movieContainer.appendChild(movieImg);
-        trendingMoviesPreviewList.appendChild(movieContainer);
-        
-    });
+    const dataApi = data.data;
+
+    renderInformation(dataApi, trendingMoviesPreviewList);
 }
 
 async function getGenresMoviesPreview(){
@@ -58,10 +63,25 @@ async function getGenresMoviesPreview(){
         const genreText = document.createTextNode(genre.name);
         genreTitle.appendChild(genreText);
         genreTitle.classList.add('category-title');
-        genreTitle.setAttribute('id', `id${genre.id}`);    
+        genreTitle.setAttribute('id', `id${genre.id}`);
+        //A cada genero de la api le estamos generando un evento el cual me redirecciona a search con el id y nombre de el genero.
+        genreTitle.addEventListener('click', () => {
+          location.hash = `#category=${genre.id}-${genre.name}`;
+        })    
     
         genreContainer.appendChild(genreTitle);
         categoriesPreviewList.appendChild(genreContainer);
     });
+}
+
+async function getMoviesByCategory(id, hashUrl){
+  const data = await axiosAPI(`/discover/movie`, {
+    params: {
+      //with_genres es porque es un parametro de la API para traer las peliculas por el id del genero. 
+      with_genres: id
+    }
+  });
+  const dataApi = data.data;
+  renderInformation(dataApi, genericSection);
 }
 
