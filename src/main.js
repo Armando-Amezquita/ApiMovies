@@ -20,14 +20,17 @@ const axiosAPI = axios.create({
 })
 
 // Utils
-function renderInformation(data, container){
+function renderInformationMovies(data, container){
+  console.log(data)
+    //Con esta linea se limpia el codigo que ya tenia cuando se haga la navegacion
   container.innerHTML = '';
-
-  console.log(container);
 
   data.results.forEach(movie => {
       const movieContainer = document.createElement('div');
       movieContainer.classList.add('movie-container');
+      movieContainer.addEventListener('click', () => {
+        location.hash = `#movie=${movie.id}`;
+      })
       const movieImg = document.createElement('img');
       movieImg.classList.add('movie-img');
       movieImg.setAttribute('alt', movie.title);
@@ -37,44 +40,39 @@ function renderInformation(data, container){
     });
 }
 
+function renderInformationGenres(data, container){
+    //Con esta linea se limpia el codigo que ya tenia cuando se haga la navegacion
+  container.innerHTML = '';
+
+  console.log(data)
+  data.genres.forEach(genre => {
+    const genreContainer = document.createElement('div');
+    genreContainer.classList.add('category-container');
+
+    const genreTitle = document.createElement('h3');
+    const genreText = document.createTextNode(genre.name);
+    genreTitle.appendChild(genreText);
+    genreTitle.classList.add('category-title');
+    genreTitle.setAttribute('id', `id${genre.id}`);
+    //A cada genero de la api le estamos generando un evento el cual me redirecciona a search con el id y nombre de el genero.
+    genreTitle.addEventListener('click', () => {
+      location.hash = `#category=${genre.id}-${genre.name}`;
+    })    
+
+    genreContainer.appendChild(genreTitle);
+    categoriesPreviewList.appendChild(genreContainer);
+});
+}
+
 // Llamados a la API
 
 async function getTrendingMoviesPreview(){
     const data = await axiosAPI(`/trending/movie/day`);
-    
     const dataApi = data.data;
-
-    renderInformation(dataApi, trendingMoviesPreviewList);
+    renderInformationMovies(dataApi, trendingMoviesPreviewList);
 }
 
-async function getGenresMoviesPreview(){
-
-    const data = await axiosAPI(`/genre/movie/list`);
-    // const categoriesPreviewList = document.querySelector('#categoriesPreview .categoriesPreview-list');
-
-    //Con esta linea se limpia el codigo que ya tenia cuando se haga la navegacion
-    categoriesPreviewList.innerHTML = '';
-
-    data.data.genres.forEach(genre => {
-        const genreContainer = document.createElement('div');
-        genreContainer.classList.add('category-container');
-
-        const genreTitle = document.createElement('h3');
-        const genreText = document.createTextNode(genre.name);
-        genreTitle.appendChild(genreText);
-        genreTitle.classList.add('category-title');
-        genreTitle.setAttribute('id', `id${genre.id}`);
-        //A cada genero de la api le estamos generando un evento el cual me redirecciona a search con el id y nombre de el genero.
-        genreTitle.addEventListener('click', () => {
-          location.hash = `#category=${genre.id}-${genre.name}`;
-        })    
-    
-        genreContainer.appendChild(genreTitle);
-        categoriesPreviewList.appendChild(genreContainer);
-    });
-}
-
-async function getMoviesByCategory(id, hashUrl){
+async function getMoviesByCategory(id){
   const data = await axiosAPI(`/discover/movie`, {
     params: {
       //with_genres es porque es un parametro de la API para traer las peliculas por el id del genero. 
@@ -82,6 +80,87 @@ async function getMoviesByCategory(id, hashUrl){
     }
   });
   const dataApi = data.data;
-  renderInformation(dataApi, genericSection);
+  renderInformationMovies(dataApi, genericSection);
+}
+
+async function getGenresMoviesPreview(){
+    const data = await axiosAPI(`/genre/movie/list`);
+    const genreApi = data.data;
+    renderInformationGenres(genreApi, categoriesPreviewList)
+}
+
+async function getSearchMovieValue(query){
+  try {
+    const data = await axiosAPI(`/search/movie`, {
+      params: {
+        query
+      }
+    });
+    const dataApi = data.data;
+    renderInformationMovies(dataApi, genericSection);
+    
+  } catch (error) {
+    console.log(error);
+  }
+} 
+
+async function getTrendingMovies(){
+  const data = await axiosAPI(`/trending/movie/day`);
+  const dataApi = data.data;
+  console.log(dataApi)
+  renderInformationMovies(dataApi, genericSection);
+}
+
+async function getMovieDetails(idMovie){
+  console.log(idMovie)
+  const data = await axiosAPI(`/movie/${idMovie}`);
+  const dataApi = data.data;
+  console.log(dataApi)
+  // renderInformationMovies(dataApi, genericSection);
+  renderDetailsMovie(dataApi);
+}
+
+async function renderDetailsMovie(data){
+
+  const movieImgUrl = `https://image.tmdb.org/t/p/w500${data.poster_path}`
+  headerSection.style.background = `
+    linear-gradient(
+      180deg,
+      rgba(0,0,0,0.35) 19.27%,
+      rgba(0,0,0,0) 29.17%
+    ),
+    url(${movieImgUrl})`;
+  movieDetailTitle.innerHTML = data.title;
+  movieDetailDescription.innerHTML = data.overview;
+  movieDetailScore.innerHTML = data.vote_average;
+  renderGe(data);
+  
+  await getMoviesRelated(data.id);
+}
+
+async function getMoviesRelated(id){
+  const data = await axiosAPI(`/movie/${id}/recommendations`);
+  let movies = data.data;
+
+  renderInformationMovies(movies, relatedMoviesContainer );
+}
+
+async function renderGe(data){
+
+  const genreContainer = document.querySelector('.categories-list');
+  
+  data.genres.forEach(genre => {
+    const genreConteinerDiv = document.createElement('div');
+    genreConteinerDiv.classList.add('category-container');
+
+    const genreTitle = document.createElement('h3');
+    const genreText = document.createTextNode(genre.name);
+    genreTitle.appendChild(genreText);
+    genreTitle.classList.add('category-title');
+    genreTitle.setAttribute('id', `id${genre.id}`);
+    
+    genreConteinerDiv.appendChild(genreTitle)
+    genreContainer.appendChild(genreConteinerDiv);
+  });
 }
 

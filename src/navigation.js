@@ -1,5 +1,7 @@
 arrowBtn.addEventListener('click', () => {
-    location.hash = '#home';
+    //window.history.back(); sirve para que cuando se le click al boton vuelva a la pagina anterios y no al home
+    location.hash = window.history.back();
+    // location.hash = '#home';
 });
 
 trendingBtn.addEventListener('click', () => {
@@ -7,8 +9,9 @@ trendingBtn.addEventListener('click', () => {
 });
 
 searchFormBtn.addEventListener('click', () =>{
-    location.hash = '#search='
-})
+    location.hash = `#search=${searchFormInput.value}`; 
+});
+
 
 //DOMContentLoaded
 //Se encarga de ejecutar la funcion de navigator apenas carga la aplicacion.
@@ -72,7 +75,7 @@ function categoriesPage(){
     arrowBtn.classList.remove('inactive');
     headerTitle.classList.add('inactive');
     headerCategoryTitle.classList.remove('inactive');
-    searchForm.classList.remove('inactive');
+    searchForm.classList.add('inactive');
 
     trendingPreviewSection.classList.add('inactive');
     categoriesPreviewSection.classList.add('inactive');
@@ -104,7 +107,8 @@ function movieDetailsPage(){
     genericSection.classList.add('inactive');
     movieDetailSection.classList.remove('inactive');
 
-    
+    const [_, idMovie ] = location.hash.split('=');
+    getMovieDetails(idMovie);
 }
 
 function searchPage(){
@@ -118,8 +122,13 @@ function searchPage(){
     searchForm.classList.remove('inactive');
     trendingPreviewSection.classList.add('inactive');
     categoriesPreviewSection.classList.add('inactive');
-    genericSection.classList.add('inactive');
+    genericSection.classList.remove('inactive');
     movieDetailSection.classList.add('inactive');
+
+    const [_, query] = location.hash.split('=');
+    getSearchMovieValue(query);
+    searchFormInput.value = '';
+
 }
 
 function trendsPage(){
@@ -135,4 +144,7 @@ function trendsPage(){
     categoriesPreviewSection.classList.add('inactive');
     genericSection.classList.remove('inactive');
     movieDetailSection.classList.add('inactive');
+
+    headerCategoryTitle.innerHTML = 'Tendencias';
+    getTrendingMovies()
 }
